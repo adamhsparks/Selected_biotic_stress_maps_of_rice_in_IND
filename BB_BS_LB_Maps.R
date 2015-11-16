@@ -12,12 +12,8 @@
 #### Load libraries #####
 library(raster)
 library(rgdal)
-library(maptools)
 library(gpclib)
-library(ggplot2)
 library(plyr)
-library(RColorBrewer)
-library(cartography)
 library(classInt)
 #### End load libraries ####
 
