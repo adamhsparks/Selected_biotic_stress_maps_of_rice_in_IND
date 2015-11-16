@@ -90,8 +90,9 @@ writeOGR(IND.lb, dsn = "Cache", layer = "India_Leaf_Blast_2001-2008",
 
 
 #### Create .csv files for table
-write.csv(data.frame(IND.bb@data$ADM1_NAME, IND.bb@data$bb, IND.bs@data$bs, IND.lb@data$lb),
-          file = "Cache/India_BB-BS-LB_Severity_2001-2008.csv",
+i <- data.frame(IND.bb@data$ADM1_NAME, IND.bb@data$bb, IND.bs@data$bs, IND.lb@data$lb)
+names(i) <- c("ADM1_NAME", "Bacterial_Blight_Risk", "Brown_Spot_Risk", "Leaf_Blast_Risk")
+write.csv(i, file = "Cache/India_BB-BS-LB_Severity_2001-2008.csv",
           row.names = FALSE)
 
 
