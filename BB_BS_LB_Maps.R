@@ -37,10 +37,12 @@ diseases <- list(stack(list.files(path = "Data/EPIRICE 25deg 01-08 PK1/",
 names(diseases) <- c("bb", "bs", "lb")
 
 for (i in 1:3) {
-  j <- extract(mean(diseases[[i]]), IND, coordinates(IND), # extract the values for each state
-               method = "bilinear", weights = TRUE, fun = mean, na.rm = TRUE)
+  # extract the values for each state
+  j <- extract(mean(diseases[[i]], na.rm = TRUE), IND, coordinates(IND),
+               method = "bilinear", fun = mean)
 
-  j <- data.frame(unlist(lapply(j, FUN = mean, na.rm = TRUE))) # unlist and generate mean values for each polygon
+  # unlist and generate mean values for each polygon
+  j <- data.frame(unlist(lapply(j, FUN = mean)))
 
   row.names(j) <- row.names(IND)
   names(j) <- names(diseases[i])
@@ -58,9 +60,12 @@ IND.bs.df <- fortify(IND.bs, id = "bs", region = "bs")
 IND.lb.df <- fortify(IND.lb, id = "lb", region = "lb")
 names(IND.bb.df) <- names(IND.bs.df) <- names(IND.lb.df) <- c("Longitude", "Latitude", "order", "hole", "piece", "group", "id")
 
-IND.bb.breaks <- round(classIntervals(as.numeric(IND.bb.df$id), 5, style = "equal", labels = FALSE)$brks, 0)
-IND.bs.breaks <- round(classIntervals(as.numeric(IND.bs.df$id), 5, style = "equal", labels = FALSE)$brks, 0)
-IND.lb.breaks <- round(classIntervals(as.numeric(IND.lb.df$id), 5, style = "equal", labels = FALSE)$brks, 0)
+IND.bb.breaks <- round(classIntervals(as.numeric(IND.bb.df$id), 5,
+                                      style = "equal", labels = FALSE)$brks, 0)
+IND.bs.breaks <- round(classIntervals(as.numeric(IND.bs.df$id), 5,
+                                      style = "equal", labels = FALSE)$brks, 0)
+IND.lb.breaks <- round(classIntervals(as.numeric(IND.lb.df$id), 5,
+                                      style = "equal", labels = FALSE)$brks, 0)
 
 labs <- c("Low", "Moderately Low", "Moderate", "Moderately Severe", "Severe")
 
@@ -74,7 +79,10 @@ IND.lb@data$lb <- cut(IND.lb@data$lb, breaks = IND.lb.breaks,
                       include.lowest = TRUE,
                       labels = labs)
 
-writeOGR(IND.bb, dsn = "Cache", layer = "India_Bacterial_Blight_2001-2008", driver = "ESRI Shapefile")
-writeOGR(IND.bs, dsn = "Cache", layer = "India_Brown_Spot_2001-2008", driver = "ESRI Shapefile")
-writeOGR(IND.lb, dsn = "Cache", layer = "India_Leaf_Blast_2001-2008", driver = "ESRI Shapefile")
+writeOGR(IND.bb, dsn = "Cache", layer = "India_Bacterial_Blight_2001-2008",
+         driver = "ESRI Shapefile", overwrite_layer = TRUE)
+writeOGR(IND.bs, dsn = "Cache", layer = "India_Brown_Spot_2001-2008",
+         driver = "ESRI Shapefile", overwrite_layer = TRUE)
+writeOGR(IND.lb, dsn = "Cache", layer = "India_Leaf_Blast_2001-2008",
+        driver = "ESRI Shapefile", overwrite_layer = TRUE)
 #eos
