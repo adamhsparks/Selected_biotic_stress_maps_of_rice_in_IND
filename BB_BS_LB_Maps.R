@@ -2,11 +2,10 @@
 # title         : BB_BS_LB_Maps.R;
 # purpose       : Generate .png files for display of predicted disease severity;
 # producer      : prepared by A. Sparks;
-# last update   : in Los Baños, Laguna, September 2015;
+# last update   : in Los Baños, Laguna, November 2015;
 # inputs        : EPIRICE output from 2001-2008 for BB, BS and LB;
 # outputs       : maps of BB, BS and LB for BGD, IND and NPL ;
-# remarks 1     : requires BB_BS_LB_csv_for_GIS.R to have been run and generated
-#               : obligatory .csv files;
+# remarks 1     :;
 # Licence:      : GPL2;
 ##############################################################################
 
@@ -19,97 +18,63 @@ library(ggplot2)
 library(plyr)
 library(RColorBrewer)
 library(cartography)
+library(classInt)
 #### End load libraries ####
 
 #### Load data ####
 # GAUL Level 1 country layer (FAO)
-gaul <- readOGR(dsn = "/Users/asparks/Google Drive/Data/gaul/g2015_2014_1/India",
+IND <- readOGR(dsn = "/Users/asparks/Google Drive/Data/gaul/g2015_2014_1/India",
                 layer = "India")
 
 # EPIRICE Output
-bb <- stack(list.files(path = "Data/EPIRICE 25deg 01-08 PK1/",
-                       pattern = "bblight_audpc.tif$",
-                       full.names = TRUE))
-bs <- stack(list.files(path = "Data/EPIRICE 25deg 01-08 PK1/",
-                       pattern = "bspot_audpc.tif$",
-                       full.names = TRUE))
-lb <- stack(list.files(path = "Data/EPIRICE 25deg 01-08 PK1/",
-                       pattern = "_blast_audpc.tif$",
-                       full.names = TRUE))
+diseases <- list(stack(list.files(path = "Data/EPIRICE 25deg 01-08 PK1/",
+                                  pattern = "bblight_audpc.tif$", full.names = TRUE)),
+                 stack(list.files(path = "Data/EPIRICE 25deg 01-08 PK1/",
+                                  pattern = "bspot_audpc.tif$", full.names = TRUE)),
+                 stack(list.files(path = "Data/EPIRICE 25deg 01-08 PK1/",
+                                  pattern = "_blast_audpc.tif$", full.names = TRUE)))
 
-#### Extract values for disease by state level
+names(diseases) <- c("bb", "bs", "lb")
 
-bb <- extract(bb, gaul, method = "bilinear", df = TRUE)
-bs <- data.frame(values(bs))
-lb <- data.frame(values(lb))
+for (i in 1:3) {
+  j <- extract(mean(diseases[[i]]), IND, coordinates(IND), # extract the values for each state
+               method = "bilinear", weights = TRUE, fun = mean, na.rm = TRUE)
 
-IND.BB$BB <- factor(IND.BB$BB, levels(IND.BB$BB)[c(1, 3, 2, 4, 5)])
-IND.BS$BS <- factor(IND.BS$BS, levels(IND.BS$BS)[c(1, 3, 2, 4, 5)])
-IND.LB$LB <- factor(IND.LB$LB, levels(IND.LB$LB)[c(1, 3, 2, 4, 5)])
+  j <- data.frame(unlist(lapply(j, FUN = mean, na.rm = TRUE))) # unlist and generate mean values for each polygon
 
-IND <- SA[SA@data$ADM0_NAME == "India", ]
+  row.names(j) <- row.names(IND)
+  names(j) <- names(diseases[i])
 
-IND@data$id <- rownames(IND@data)
+  row.names(IND) <- row.names(IND)
 
-IND.df <- fortify(IND, region = "id")
+  assign(paste("IND", names(diseases[i]), sep = "."),
+         spCbind(IND, j))
+}
 
-IND.df <- join(IND.df, IND@data, by = "id")
+rm("i", "j", "diseases")
 
-IND.BB.df <- join(IND.df, IND.BB, by = "ADM1_CODE")
-IND.BS.df <- join(IND.df, IND.BS, by = "ADM1_CODE")
-IND.LB.df <- join(IND.df, IND.LB, by = "ADM1_CODE")
+IND.bb.df <- fortify(IND.bb, id = "bb", region = "bb")
+IND.bs.df <- fortify(IND.bs, id = "bs", region = "bs")
+IND.lb.df <- fortify(IND.lb, id = "lb", region = "lb")
+names(IND.bb.df) <- names(IND.bs.df) <- names(IND.lb.df) <- c("Longitude", "Latitude", "order", "hole", "piece", "group", "id")
 
-# IND
-# BB
-ggplot(data = IND.BB.df, aes(long, lat, group = group, fill = BB)) +
-  geom_polygon(color = "white", size = 0.2) +
-  scale_fill_brewer(palette = "GnBu", name = "Relative Risk") +
-  scale_y_continuous(name = "Latitude") +
-  scale_x_continuous(name = "Longitude") +
-  theme(axis.title = element_text(face = "bold", size = 6),
-        axis.text.y = element_text(size = 6),
-        axis.text.x = element_text(size = 6),
-        plot.title = element_text(face = "bold", size = 8),
-        legend.text = element_text(size = 5),
-        strip.text.x = element_text(size = 6),
-        legend.title = element_blank()) +
-  ggtitle("Relative Risk of Bacterial Blight for India") +
-  coord_map("lambert", lat0 = 6.755997, lat1 = 33.17194)
-ggsave("Maps/IND_BB.png", width = 6, height = 6, units = "in")
+IND.bb.breaks <- round(classIntervals(as.numeric(IND.bb.df$id), 5, style = "equal", labels = FALSE)$brks, 0)
+IND.bs.breaks <- round(classIntervals(as.numeric(IND.bs.df$id), 5, style = "equal", labels = FALSE)$brks, 0)
+IND.lb.breaks <- round(classIntervals(as.numeric(IND.lb.df$id), 5, style = "equal", labels = FALSE)$brks, 0)
 
-# BS
-ggplot(data = IND.BS.df, aes(long, lat, group = group, fill = BS)) +
-  geom_polygon(color = "white", size = 0.2) +
-  scale_fill_brewer(palette = "GnBu", name = "Relative Risk") +
-  scale_y_continuous(name = "Latitude") +
-  scale_x_continuous(name = "Longitude") +
-  theme(axis.title = element_text(face = "bold", size = 6),
-        axis.text.y = element_text(size = 6),
-        axis.text.x = element_text(size = 6),
-        plot.title = element_text(face = "bold", size = 8),
-        legend.text = element_text(size = 5),
-        strip.text.x = element_text(size = 6),
-        legend.title = element_blank()) +
-  ggtitle("Relative Risk of Brown Spot for India") +
-  coord_map("lambert", lat0 = 6.755997, lat1 = 33.17194)
-ggsave("Maps/IND_BS.png", width = 6, height = 6, units = "in")
+labs <- c("Low", "Moderately Low", "Moderate", "Moderately Severe", "Severe")
 
-# LB
-ggplot(data = IND.LB.df, aes(long, lat, group = group, fill = LB)) +
-  geom_polygon(color = "white", size = 0.2) +
-  scale_fill_brewer(palette = "GnBu", name = "Relative Risk") +
-  scale_y_continuous(name = "Latitude") +
-  scale_x_continuous(name = "Longitude") +
-  theme(axis.title = element_text(face = "bold", size = 6),
-        axis.text.y = element_text(size = 6),
-        axis.text.x = element_text(size = 6),
-        plot.title = element_text(face = "bold", size = 8),
-        legend.text = element_text(size = 5),
-        strip.text.x = element_text(size = 6),
-        legend.title = element_blank()) +
-  ggtitle("Relative Risk of Leaf Blast for India") +
-  coord_map("lambert", lat0 = 6.755997, lat1 = 33.17194)
-ggsave("Maps/IND_LB.png", width = 6, height = 6, units = "in")
+IND.bb@data$bb <- cut(IND.bb@data$bb, breaks = IND.bb.breaks,
+                      include.lowest = TRUE,
+                      labels = labs)
+IND.bs@data$bs <- cut(IND.bs@data$bs, breaks = IND.bs.breaks,
+                      include.lowest = TRUE,
+                      labels = labs)
+IND.lb@data$lb <- cut(IND.lb@data$lb, breaks = IND.lb.breaks,
+                      include.lowest = TRUE,
+                      labels = labs)
 
-
+writeOGR(IND.bb, dsn = "Cache", layer = "India_Bacterial_Blight_2001-2008", driver = "ESRI Shapefile")
+writeOGR(IND.bs, dsn = "Cache", layer = "India_Brown_Spot_2001-2008", driver = "ESRI Shapefile")
+writeOGR(IND.lb, dsn = "Cache", layer = "India_Leaf_Blast_2001-2008", driver = "ESRI Shapefile")
 #eos
