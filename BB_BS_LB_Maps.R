@@ -79,10 +79,20 @@ IND.lb@data$lb <- cut(IND.lb@data$lb, breaks = IND.lb.breaks,
                       include.lowest = TRUE,
                       labels = labs)
 
+#### Write shape files for Parvesh to use
+
 writeOGR(IND.bb, dsn = "Cache", layer = "India_Bacterial_Blight_2001-2008",
          driver = "ESRI Shapefile", overwrite_layer = TRUE)
 writeOGR(IND.bs, dsn = "Cache", layer = "India_Brown_Spot_2001-2008",
          driver = "ESRI Shapefile", overwrite_layer = TRUE)
 writeOGR(IND.lb, dsn = "Cache", layer = "India_Leaf_Blast_2001-2008",
         driver = "ESRI Shapefile", overwrite_layer = TRUE)
+
+
+#### Create .csv files for table
+write.csv(data.frame(IND.bb@data$ADM1_NAME, IND.bb@data$bb, IND.bs@data$bs, IND.lb@data$lb),
+          file = "Cache/India_BB-BS-LB_Severity_2001-2008.csv",
+          row.names = FALSE)
+
+
 #eos
