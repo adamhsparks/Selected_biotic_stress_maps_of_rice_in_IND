@@ -23,7 +23,7 @@ To estimate the relative risk of three major rice diseases in India, the EPIRICE
 
 # Results
 
-Bacterial leaf blight risk is most severe in the southwest and north east. The disease most commonly occurs in areas of high humidity and high temperatures. High rates of fertilization will favor disease development. Bacterial blight can be controlled using resistant varieties, proper fertilisation rates and keep the fields clean of weeds and after the season, stubble, to reduce sources of the bacteria capable of causing infection.
+Bacterial leaf blight risk is most severe in the southwest and northeast. The disease most commonly occurs in areas of high humidity and high temperatures. High rates of fertilization will favor disease development. Bacterial blight can be controlled using resistant varieties, proper fertilisation rates and keep the fields clean of weeds and after the season, stubble, to reduce sources of the bacteria capable of causing infection.
 
 Brown spot risk follows a similar pattern as bacterial blight. The disease is also favoured by high temperatures but rather rice stressed by drought or low fertility rates favour disease development.  Thus rainfed rice is often afflicted with this disease. For control, use varieties that are known to be resistant, apply proper fertiliser rates and use certified or good seeds along with seed treatments as the disease is seedbourne.
 
