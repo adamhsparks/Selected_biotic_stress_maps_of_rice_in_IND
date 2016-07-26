@@ -5,7 +5,6 @@ date: "25 July 2016"
 output:
   word_document:
     reference_docx: style reference.docx
-    keep_md: TRUE
 bibliography: bibliography.bib
 ---
 
@@ -63,7 +62,7 @@ if (!require("viridis")) {
 
 #### Load data ####
 # GAUL Level 1 country layer (FAO)
-IND <- readOGR(dsn = "/Users/asparks/Google Drive/Data/gaul/g2015_2014_1/India",
+IND <- readOGR(dsn = path.expand("~/Google Drive/Data/GAUL/g2015_2014_1/India"),
                layer = "India")
 
 # EPIRICE Output
@@ -101,22 +100,12 @@ rm("i", "j", "diseases")
 
 names(k) <- c("IND_bb", "IND_bs", "IND_lb")
 
-IND_bb_df <- fortify(k$IND_bb, id = "bb", region = "bb")
-IND_bs_df <- fortify(k$IND_bs, id = "bs", region = "bs")
-IND_lb_df <- fortify(k$IND_lb, id = "lb", region = "lb")
-names(IND_bb_df) <- names(IND_bs_df) <- names(IND_lb_df) <- c("Longitude",
-                                                              "Latitude",
-                                                              "order",
-                                                              "hole",
-                                                              "piece",
-                                                              "group",
-                                                              "id")
 
-IND_bb_breaks <- round(classIntervals(as.numeric(IND_bb_df$id), 5,
+IND_bb_breaks <- round(classIntervals(as.numeric(k$IND_bb@data$bb), 5,
                                       style = "equal", labels = FALSE)$brks, 0)
-IND_bs_breaks <- round(classIntervals(as.numeric(IND_bs_df$id), 5,
+IND_bs_breaks <- round(classIntervals(as.numeric(k$IND_bs@data$bs), 5,
                                       style = "equal", labels = FALSE)$brks, 0)
-IND_lb_breaks <- round(classIntervals(as.numeric(IND_lb_df$id), 5,
+IND_lb_breaks <- round(classIntervals(as.numeric(k$IND_lb@data$lb), 5,
                                       style = "equal", labels = FALSE)$brks, 0)
 
 labs <- c("Low", "Moderately Low", "Moderate", "Moderately Severe", "Severe")
@@ -137,12 +126,17 @@ k$IND_lb@data$lb <- cut(k$IND_lb@data$lb, breaks = IND_lb_breaks,
 ```{r bb_map, fig.cap=("Relative risk of bacterial blight for India based on EPIRICE output and expert opinion from Stress Tolerant Rice Varieties for Africa and South Asia (STRASA) partners.")}
 # Create a dataframe for ggplot
 IND_bb_fort <- fortify(k$IND_bb, id = "bb", region = "bb")
+IND_bb_fort$id <- as.factor(IND_bb_fort$id)
 
 ggplot(data = IND_bb_fort, aes(x = long, y = lat, group = group,
                                fill = id)) +
   geom_polygon(color = "white", size = 0.2) +
   labs(x = "Longitude", y = "Latitude", title = "Bacterial Blight") +
-  scale_fill_viridis(name = "Relative Risk\nRank", discrete = TRUE) +
+  scale_fill_viridis(option = "B", name = "Relative Risk\nRank",
+                     discrete = TRUE,
+                     direction = -1,
+                     limits = c("Low", "Moderately Low", "Moderate",
+                                "Moderately Severe", "Severe")) +
   coord_map("lambert", lat0 = 6.755997, lat1 = 33.17194)
 ```
 
@@ -150,12 +144,17 @@ ggplot(data = IND_bb_fort, aes(x = long, y = lat, group = group,
 ```{r bs_map, fig.cap=("Relative risk of brown spot for India based on EPIRICE output and expert opinion from Stress Tolerant Rice Varieties for Africa and South Asia (STRASA) partners.")}
 # Create a dataframe for ggplot
 IND_bs_fort <- fortify(k$IND_bs, id = "bs", region = "bs")
+IND_bs_fort$id <- as.factor(IND_bs_fort$id)
 
 ggplot(data = IND_bs_fort, aes(x = long, y = lat, group = group,
                                fill = id)) +
   geom_polygon(color = "white", size = 0.2) +
   labs(x = "Longitude", y = "Latitude", title = "Brown Spot") +
-  scale_fill_viridis(name = "Relative Risk\nRank", discrete = TRUE) +
+  scale_fill_viridis(option = "B", name = "Relative Risk\nRank",
+                     discrete = TRUE,
+                     direction = -1,
+                     limits = c("Low", "Moderately Low", "Moderate",
+                                "Moderately Severe", "Severe")) +
   coord_map("lambert", lat0 = 6.755997, lat1 = 33.17194)
 ```
 
@@ -163,28 +162,21 @@ ggplot(data = IND_bs_fort, aes(x = long, y = lat, group = group,
 
 # Create a dataframe for ggplot
 IND_lb_fort <- fortify(k$IND_lb, id = "lb", region = "lb")
+IND_lb_fort$id <- as.factor(IND_lb_fort$id)
 
 ggplot(data = IND_lb_fort, aes(x = long, y = lat, group = group,
                                fill = id)) +
   geom_polygon(color = "white", size = 0.2) +
   labs(x = "Longitude", y = "Latitude", title = "Leaf Blast") +
-  scale_fill_viridis(name = "Relative Risk\nRank", discrete = TRUE) +
+  scale_fill_viridis(option = "B", name = "Relative Risk\nRank",
+                     discrete = TRUE,
+                     direction = -1,
+                     limits = c("Low", "Moderately Low", "Moderate",
+                                "Moderately Severe", "Severe")) +
   coord_map("lambert", lat0 = 6.755997, lat1 = 33.17194)
 ```
 
-## Generate shapefiles
-
-```{r write_shapefiles}
-
-writeOGR(k$IND_bb, dsn = "Cache", layer = "India_Bacterial_Blight_2001-2008",
-         driver = "ESRI Shapefile", overwrite_layer = TRUE)
-writeOGR(k$IND_bs, dsn = "Cache", layer = "India_Brown_Spot_2001-2008",
-         driver = "ESRI Shapefile", overwrite_layer = TRUE)
-writeOGR(k$IND_lb, dsn = "Cache", layer = "India_Leaf_Blast_2001-2008",
-         driver = "ESRI Shapefile", overwrite_layer = TRUE)
-```
-
-## Generate CSV files
+## Generate CSV files for use in GIS mapping
 
 ```{r write_CSV_files}
 
