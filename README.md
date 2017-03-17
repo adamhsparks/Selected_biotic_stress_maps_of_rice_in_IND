@@ -1,4 +1,4 @@
-# Selected bioticbstress maps of rice in IND
+# Selected biotic stress maps of rice in IND
 
 Code for book chapter on stresses of rice in India.
 
